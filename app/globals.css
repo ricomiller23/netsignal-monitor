@@ -1,0 +1,38 @@
+:root {
+  --bg: #FFFFFF;
+  --bg-subtle: #F6F8FB;
+  --border: #E4E9F0;
+  --text: #0B1220;
+  --text-body: #24303F;
+  --text-muted: #5B6779;
+  --text-faint: #8494A8;
+  --brand: #0E63C4;
+  --brand-hover: #0A4E9E;
+  --brand-soft: #EBF3FD;
+  --brand-ink: #0A3F73;
+  --live: #0BA360;
+  --anomaly: #B45309;
+  --outage: #C2410C;
+  --shutdown: #7F1D1D;
+  --resolved: #0BA360;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-display: 'Manrope', var(--font-ui);
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-body);
+  font-family: var(--font-ui);
+  margin: 0;
+  padding: 0;
+}
+
+.tabular-nums {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
