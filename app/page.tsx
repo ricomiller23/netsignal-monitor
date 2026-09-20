@@ -1,5 +1,7 @@
 'use client';
 
+import { GlobalOutageMap } from "@/components/GlobalOutageMap";
+
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
@@ -132,6 +134,8 @@ export default function LiveBoardPage() {
           </div>
         </div>
       </div>
+
+      <GlobalOutageMap />
 
       {/* Main Events Feed Section */}
       <div className="space-y-4">
