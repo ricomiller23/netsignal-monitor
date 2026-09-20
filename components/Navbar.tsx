@@ -1,132 +1,127 @@
-'use client';
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Wifi, RefreshCw, Menu, X, Activity, Route } from 'lucide-react';
-import { useRefreshOnOpen } from '../lib/freshness';
+"use client";
 
-export default function Navbar() {
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Wifi, RefreshCw, Menu, X } from "lucide-react";
+import { useRefreshOnOpen } from "@/lib/freshness";
+
+export function Navbar() {
   const pathname = usePathname();
+  const { isStale, timeSinceRefresh, refresh } = useRefreshOnOpen();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState<string>('Just now');
+  const [spinning, setSpinning] = useState(false);
 
-  useRefreshOnOpen(() => {
-    setLastRefreshed(new Date().toLocaleTimeString());
-  });
-
-  const handleManualRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setLastRefreshed(new Date().toLocaleTimeString());
-      setIsRefreshing(false);
-    }, 600);
+  const handleRefresh = () => {
+    setSpinning(true);
+    refresh();
+    setTimeout(() => setSpinning(false), 600);
   };
 
   const navLinks = [
-    { href: '/', label: 'Outage Board' },
-    { href: '/routing', label: 'BGP Routing' },
-    { href: '/history', label: 'Shutdown History' },
-    { href: '/archive', label: '24M Archive' },
-    { href: '/method', label: 'Methodology' },
-    { href: '/admin', label: 'Admin' },
+    { href: "/", label: "Outage Board" },
+    { href: "/routing", label: "BGP Routing" },
+    { href: "/history", label: "Shutdown History" },
+    { href: "/archive", label: "Archive" },
+    { href: "/method", label: "Method" },
+    { href: "/admin", label: "Admin" },
   ];
 
   return (
-    <header className="bg-white border-b border-border sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand */}
-        <Link href="/" className="flex items-center space-x-3 group">
-          <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center text-white shadow-sm group-hover:bg-brand-hover transition-colors">
-            <Wifi className="w-5 h-5" />
+    <header className="border-b border-border bg-white sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-md bg-brand flex items-center justify-center text-white font-bold">
+                <Wifi className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-display font-extrabold text-lg text-text tracking-tight">NET<span className="text-brand">SIGNAL</span></span>
+                <span className="hidden md:inline-block ml-2 text-xs font-mono text-text-muted px-1.5 py-0.5 rounded bg-bg-subtle border border-border">OUTAGES·BGP</span>
+              </div>
+            </Link>
           </div>
-          <div>
-            <div className="font-display font-extrabold text-lg text-text tracking-tight flex items-center space-x-2">
-              <span>NET<span className="text-brand">SIGNAL</span></span>
-              <span className="bg-brand-soft text-brand-ink text-[11px] font-mono px-2 py-0.5 rounded-full border border-brand/20">
-                VOL-II
+
+          <nav className="hidden lg:flex items-center space-x-1 sm:space-x-4 text-sm font-medium">
+            {navLinks.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-3 py-1.5 rounded-md transition-colors ${
+                    active ? "bg-brand-soft text-brand font-semibold" : "text-text-muted hover:text-text hover:bg-bg-subtle"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            <div className="h-4 w-px bg-border mx-1" />
+
+            <div className="flex items-center space-x-2">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-live mr-1.5 animate-pulse" />
+                LIVE 90s
               </span>
-            </div>
-            <div className="text-[11px] text-text-muted hidden sm:block">
-              Internet Outage & Network-Integrity Monitor
-            </div>
-          </div>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-1 text-sm font-medium">
-          {navLinks.map((link) => {
-            const active = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-1.5 rounded-lg transition-colors ${
-                  active
-                    ? 'bg-brand-soft text-brand-ink font-semibold'
-                    : 'text-text-muted hover:text-text hover:bg-bg-subtle'
-                }`}
+              {isStale && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono bg-amber-50 text-amber-700 border border-amber-200">
+                  STALE
+                </span>
+              )}
+              <span className="text-[11px] font-mono text-text-faint hidden sm:inline">{timeSinceRefresh}</span>
+              <button
+                onClick={handleRefresh}
+                className="p-1.5 text-text-muted hover:text-brand hover:bg-bg-subtle rounded-md transition-colors"
+                title="Refresh Outage Stream (30s throttle)"
+                aria-label="Refresh feeds"
               >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
+                <RefreshCw className={`w-4 h-4 ${spinning ? 'animate-spin text-brand' : ''}`} />
+              </button>
+            </div>
+          </nav>
 
-        {/* Live Status & Controls */}
-        <div className="flex items-center space-x-3">
-          <div className="hidden sm:flex flex-col items-end text-xs">
-            <span className="text-text-muted">Synced: {lastRefreshed}</span>
-            <span className="text-live flex items-center gap-1 font-mono font-semibold text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-live animate-ping" />
-              LIVE 90s POLL
+          {/* Mobile controls */}
+          <div className="flex items-center space-x-2 lg:hidden">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-live mr-1 animate-pulse" />
+              LIVE
             </span>
+            <button
+              onClick={handleRefresh}
+              className="p-1.5 text-text-muted hover:text-brand rounded-md"
+              aria-label="Refresh feeds"
+            >
+              <RefreshCw className={`w-4 h-4 ${spinning ? 'animate-spin text-brand' : ''}`} />
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-1.5 text-text rounded-md hover:bg-bg-subtle"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6 text-text" />}
+            </button>
           </div>
-
-          <button
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            className="p-2 border border-border rounded-lg hover:bg-bg-subtle text-text-body transition-colors disabled:opacity-50 min-h-[40px] min-w-[40px] flex items-center justify-center"
-            title="Refresh feeds (30s throttle)"
-            aria-label="Refresh feeds"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-brand' : 'text-text-muted'}`} />
-          </button>
-
-          {/* Mobile Hamburger Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 border border-border rounded-lg text-text-body hover:bg-bg-subtle transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-border bg-white px-4 pt-3 pb-5 space-y-2 shadow-lg animate-in slide-in-from-top duration-200">
-          <div className="flex items-center justify-between pb-2 border-b border-border text-xs text-text-muted">
-            <span>Radar & IODA: <strong className="text-live">● Active 90s Stream</strong></span>
-            <span>Synced: {lastRefreshed}</span>
-          </div>
-          <div className="grid grid-cols-1 gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href
-                    ? 'bg-brand-soft text-brand-ink font-semibold'
-                    : 'text-text-body hover:bg-bg-subtle'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+        <div className="lg:hidden border-t border-border bg-white px-4 py-3 space-y-1 shadow-md">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === link.href ? "bg-brand-soft text-brand font-semibold" : "text-text hover:bg-bg-subtle"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
       )}
     </header>

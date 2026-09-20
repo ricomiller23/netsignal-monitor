@@ -1,217 +1,184 @@
 'use client';
+
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   SEED_OUTAGES, 
   SEED_NETWORK_HEALTH 
-} from '../lib/fallback-data';
-import { calculateEventDuration, OutageState } from '../lib/causes';
+} from '@/lib/fallback-data';
+import { calculateEventDuration } from '@/lib/causes';
 import { 
   Activity, 
   AlertTriangle, 
-  ArrowUpRight, 
-  Clock, 
+  ExternalLink, 
   Quote, 
-  Search, 
-  Filter, 
-  Wifi, 
-  Radio, 
-  ShieldCheck, 
-  Globe2,
-  ServerCrash,
-  Info
+  Info, 
+  Search 
 } from 'lucide-react';
 
-export default function HomePage() {
+export default function LiveBoardPage() {
+  const [filterMode, setFilterMode] = useState<'all' | 'outage' | 'shutdown' | 'anomaly' | 'resolved'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedState, setSelectedState] = useState<string>('all');
 
   const filteredOutages = useMemo(() => {
-    return SEED_OUTAGES.filter(evt => {
+    return SEED_OUTAGES.filter((evt) => {
       const matchSearch = evt.country.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (evt.region && evt.region.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchState = selectedState === 'all' || evt.state === selectedState;
-      return matchSearch && matchState;
+      const matchFilter = filterMode === 'all' || evt.state === filterMode;
+      return matchSearch && matchFilter;
     });
-  }, [searchQuery, selectedState]);
+  }, [searchQuery, filterMode]);
 
   return (
     <div className="space-y-8">
-      {/* Invariant Directive Banner */}
-      <div className="bg-brand-soft border border-brand/20 p-4 sm:p-5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-brand-ink shadow-sm">
-        <div className="flex items-start space-x-3">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-brand" />
-          <div className="space-y-1">
-            <div className="font-bold text-sm sm:text-base">
-              INVARIANT DIRECTIVE: An anomaly is not an outage; a cause is always an attributed assertion.
-            </div>
-            <p className="text-xs sm:text-sm text-text-body leading-relaxed">
-              Traffic drops show what changed, not why. <strong>Observations</strong> (traffic drop %, BGP withdrawals) and <strong>Causes</strong> (power cut, subsea severance, state curfew) 
-              are held in strictly separate tables. Causes are verbatim quoted statements from named authorities, never inferred from drop percentages.
-            </p>
+      {/* Hero Banner with Unified Metrics Strip */}
+      <div className="bg-bg-subtle border border-border rounded-lg p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div className="flex items-center space-x-2">
+            <h1 className="text-xl font-display font-bold text-text">Global Internet Outage & Network-Integrity Monitor</h1>
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-amber-100 text-amber-900 border border-amber-300">
+              Seed Active
+            </span>
           </div>
-        </div>
-        <Link 
-          href="/method" 
-          className="text-xs font-semibold text-brand hover:text-brand-hover whitespace-nowrap flex items-center gap-1 self-end sm:self-center"
-        >
-          Methodology Guide <ArrowUpRight className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-
-      {/* Top Telemetry Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm space-y-1">
-          <div className="text-[11px] font-semibold text-text-muted flex justify-between">
-            <span>ACTIVE DISRUPTIONS</span>
-            <span className="text-live font-bold font-mono">LIVE</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-text">{SEED_NETWORK_HEALTH.activeDisruptionsCount}</div>
-          <div className="text-[10px] text-text-faint font-mono">Monitored Ingest Stream</div>
+          <p className="text-sm text-text-muted mt-1">
+            Where connectivity is disrupted — and who is saying why. Observations and causes are stored as strictly isolated facts.
+          </p>
         </div>
 
-        <div className="bg-white border-2 border-outage/40 p-4 rounded-xl shadow-sm space-y-1">
-          <div className="text-[11px] font-semibold text-outage flex justify-between">
-            <span>CORROBORATED OUTAGES</span>
-            <span className="bg-outage text-white px-1 rounded text-[10px] font-bold">▲ MULTI</span>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono">
+          <div className="bg-white border border-border px-3 py-2 rounded-md shadow-sm">
+            <span className="text-text-muted">Active Disruptions:</span> <strong className="text-text font-bold num-tabular">{SEED_NETWORK_HEALTH.activeDisruptionsCount}</strong>
           </div>
-          <div className="text-2xl font-bold font-mono text-outage">{SEED_NETWORK_HEALTH.corroboratedOutagesCount}</div>
-          <div className="text-[10px] text-text-faint font-mono">2+ Independent Sources</div>
-        </div>
-
-        <div className="bg-white border-2 border-shutdown/40 p-4 rounded-xl shadow-sm space-y-1">
-          <div className="text-[11px] font-semibold text-shutdown flex justify-between">
-            <span>STATE SHUTDOWNS</span>
-            <span className="bg-shutdown text-white px-1 rounded text-[10px] font-bold">■ CURFEW</span>
+          <div className="bg-white border border-border px-3 py-2 rounded-md shadow-sm">
+            <span className="text-text-muted">Corroborated Outages:</span> <strong className="text-danger font-bold num-tabular">▲ {SEED_NETWORK_HEALTH.corroboratedOutagesCount}</strong>
           </div>
-          <div className="text-2xl font-bold font-mono text-shutdown">{SEED_NETWORK_HEALTH.attributedShutdownsCount}</div>
-          <div className="text-[10px] text-text-faint font-mono">Attributed Mandate Order</div>
-        </div>
-
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm space-y-1">
-          <div className="text-[11px] font-semibold text-text-muted flex justify-between">
-            <span>BGP PREFIX WITHDRAWALS</span>
-            <span className="bg-bg-subtle text-text-muted px-1 rounded text-[10px]">RIS</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-text">{SEED_NETWORK_HEALTH.bgpWithdrawnPrefixesCount}</div>
-          <div className="text-[10px] text-text-faint font-mono">AS42610 Anomaly Detected</div>
-        </div>
-
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm space-y-1">
-          <div className="text-[11px] font-semibold text-text-muted flex justify-between">
-            <span>GLOBAL TRAFFIC HEALTH</span>
-            <span className="text-live font-bold font-mono">99.8%</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-text">99.8%</div>
-          <div className="text-[10px] text-text-faint font-mono">Cloudflare Radar Index</div>
-        </div>
-
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm space-y-1">
-          <div className="text-[11px] font-semibold text-text-muted flex justify-between">
-            <span>IODA SCANNED ASNs</span>
-            <span className="text-text-muted text-[10px]">GEORGIA TECH</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-text">{SEED_NETWORK_HEALTH.iodaMonitoredAsns}</div>
-          <div className="text-[10px] text-text-faint font-mono">Telescope Darknet Probing</div>
-        </div>
-      </div>
-
-      {/* State Definitions & Qualitative Distinction Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm flex items-start space-x-3">
-          <div className="w-3.5 h-3.5 rounded-full bg-anomaly flex-shrink-0 mt-1" />
-          <div className="space-y-0.5 text-xs">
-            <div className="font-bold text-text">● ANOMALY (Circle)</div>
-            <div className="text-text-muted">Single source observes deviation from baseline. Outage unconfirmed.</div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm flex items-start space-x-3">
-          <div className="w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[12px] border-b-outage flex-shrink-0 mt-1" />
-          <div className="space-y-0.5 text-xs">
-            <div className="font-bold text-text">▲ OUTAGE (Triangle)</div>
-            <div className="text-text-muted">Two or more independent monitors corroborate widespread drop.</div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm flex items-start space-x-3">
-          <div className="w-3.5 h-3.5 bg-shutdown flex-shrink-0 mt-1" />
-          <div className="space-y-0.5 text-xs">
-            <div className="font-bold text-text">■ SHUTDOWN (Square)</div>
-            <div className="text-text-muted">An authority or civil monitor asserts an intentional restriction order.</div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-border p-4 rounded-xl shadow-sm flex items-start space-x-3">
-          <div className="w-3.5 h-3.5 rounded-full bg-resolved flex-shrink-0 mt-1" />
-          <div className="space-y-0.5 text-xs">
-            <div className="font-bold text-text">● RESOLVED (Circle)</div>
-            <div className="text-text-muted">Traffic restored to baseline. Duration computed only for resolved events.</div>
+          <div className="bg-white border border-border px-3 py-2 rounded-md shadow-sm">
+            <span className="text-text-muted">Attributed Curfews:</span> <strong className="text-purple-700 font-bold num-tabular">■ {SEED_NETWORK_HEALTH.attributedShutdownsCount}</strong>
           </div>
         </div>
       </div>
 
-      {/* Main Section Header with Filters */}
+      {/* Top Telemetry KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 bg-white border border-border rounded-lg shadow-sm">
+          <span className="text-text-muted text-[11px] block font-mono">Active Disruptions Monitored</span>
+          <div className="text-2xl font-bold font-mono text-text num-tabular mt-1">
+            {SEED_NETWORK_HEALTH.activeDisruptionsCount} Events
+          </div>
+          <span className="text-[10px] text-text-faint font-mono">Cloudflare Radar & IODA Ingest</span>
+        </div>
+
+        <div className="p-4 bg-white border border-border rounded-lg shadow-sm">
+          <span className="text-text-muted text-[11px] block font-mono">Corroborated Outages (▲)</span>
+          <div className="text-2xl font-bold font-mono text-danger num-tabular mt-1">
+            {SEED_NETWORK_HEALTH.corroboratedOutagesCount} Multi-Source
+          </div>
+          <span className="text-[10px] text-text-faint font-mono">2+ Independent Sources Corroborated</span>
+        </div>
+
+        <div className="p-4 bg-white border border-border rounded-lg shadow-sm">
+          <span className="text-text-muted text-[11px] block font-mono">State-Mandated Shutdowns (■)</span>
+          <div className="text-2xl font-bold font-mono text-purple-700 num-tabular mt-1">
+            {SEED_NETWORK_HEALTH.attributedShutdownsCount} Declaration
+          </div>
+          <span className="text-[10px] text-text-faint font-mono">Attributed Government Curfew Directive</span>
+        </div>
+
+        <div className="p-4 bg-white border border-border rounded-lg shadow-sm">
+          <span className="text-text-muted text-[11px] block font-mono">BGP Prefix Withdrawals</span>
+          <div className="text-2xl font-bold font-mono text-amber-700 num-tabular mt-1">
+            {SEED_NETWORK_HEALTH.bgpWithdrawnPrefixesCount} Prefixes
+          </div>
+          <span className="text-[10px] text-text-faint font-mono">RIPE RIS Anomaly on AS42610</span>
+        </div>
+      </div>
+
+      {/* Strict Invariant Warning Strip */}
+      <div className="border-l-4 border-brand bg-brand-soft/40 p-4 rounded-r-md text-xs text-brand-ink leading-relaxed font-mono">
+        <strong>Observation ≠ Cause Invariant:</strong> Traffic drops show what changed, not why. Quantitative observations (traffic collapse %, BGP withdrawals) and Qualitative causes (power cut, subsea severance, government shutdown) are held in separate tables. Causes are verbatim quoted statements from named authorities, never inferred from traffic graphs. Active disruptions strictly report <code className="bg-white px-1 py-0.5 rounded">ongoing — duration unknown</code>.
+      </div>
+
+      {/* Geometric State Definitions Key */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
+        <div className="bg-white border border-border p-3 rounded-lg shadow-sm flex items-center space-x-2">
+          <span className="w-3 h-3 rounded-full bg-amber-600 flex-shrink-0" />
+          <div>
+            <strong className="text-text">● ANOMALY</strong>
+            <span className="text-text-muted block text-[11px]">Single-source deviation</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-border p-3 rounded-lg shadow-sm flex items-center space-x-2">
+          <span className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-danger flex-shrink-0" />
+          <div>
+            <strong className="text-text">▲ OUTAGE</strong>
+            <span className="text-text-muted block text-[11px]">2+ Corroborated sources</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-border p-3 rounded-lg shadow-sm flex items-center space-x-2">
+          <span className="w-2.5 h-2.5 bg-purple-700 flex-shrink-0" />
+          <div>
+            <strong className="text-text">■ SHUTDOWN</strong>
+            <span className="text-text-muted block text-[11px]">Attributed mandate order</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-border p-3 rounded-lg shadow-sm flex items-center space-x-2">
+          <span className="w-3 h-3 rounded-full bg-live flex-shrink-0" />
+          <div>
+            <strong className="text-text">● RESOLVED</strong>
+            <span className="text-text-muted block text-[11px]">Restored connectivity</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Events Feed Section */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <h2 className="text-xl font-bold font-display text-text flex items-center gap-2">
-              <Activity className="w-5 h-5 text-brand" />
-              <span>Active Disruption Telemetry Feed</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-text-muted">
-              Corroborated outages, ongoing anomalies, and attributed shutdown declarations
-            </p>
-          </div>
+          <h2 className="text-lg font-display font-bold text-text flex items-center gap-2">
+            <Activity className="w-5 h-5 text-brand" />
+            <span>Active Monitored Disruption Feed</span>
+            <span className="text-xs font-mono text-text-muted font-normal">({filteredOutages.length} Events)</span>
+          </h2>
 
-          {/* Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
             <button
-              onClick={() => setSelectedState('all')}
-              className={`px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                selectedState === 'all'
-                  ? 'bg-brand text-white border-brand shadow-sm font-semibold'
-                  : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
+              onClick={() => setFilterMode('all')}
+              className={`px-2.5 py-1 rounded border transition ${
+                filterMode === 'all' ? 'bg-brand text-white border-brand font-bold' : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
               }`}
             >
               All Events
             </button>
             <button
-              onClick={() => setSelectedState('outage')}
-              className={`px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                selectedState === 'outage'
-                  ? 'bg-outage text-white border-outage shadow-sm font-semibold'
-                  : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
+              onClick={() => setFilterMode('outage')}
+              className={`px-2.5 py-1 rounded border transition ${
+                filterMode === 'outage' ? 'bg-danger text-white border-danger font-bold' : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
               }`}
             >
               ▲ Outages
             </button>
             <button
-              onClick={() => setSelectedState('shutdown')}
-              className={`px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                selectedState === 'shutdown'
-                  ? 'bg-shutdown text-white border-shutdown shadow-sm font-semibold'
-                  : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
+              onClick={() => setFilterMode('shutdown')}
+              className={`px-2.5 py-1 rounded border transition ${
+                filterMode === 'shutdown' ? 'bg-purple-700 text-white border-purple-700 font-bold' : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
               }`}
             >
               ■ Shutdowns
             </button>
             <button
-              onClick={() => setSelectedState('anomaly')}
-              className={`px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                selectedState === 'anomaly'
-                  ? 'bg-anomaly text-white border-anomaly shadow-sm font-semibold'
-                  : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
+              onClick={() => setFilterMode('anomaly')}
+              className={`px-2.5 py-1 rounded border transition ${
+                filterMode === 'anomaly' ? 'bg-amber-600 text-white border-amber-600 font-bold' : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
               }`}
             >
               ● Anomalies
             </button>
             <button
-              onClick={() => setSelectedState('resolved')}
-              className={`px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                selectedState === 'resolved'
-                  ? 'bg-resolved text-white border-resolved shadow-sm font-semibold'
-                  : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
+              onClick={() => setFilterMode('resolved')}
+              className={`px-2.5 py-1 rounded border transition ${
+                filterMode === 'resolved' ? 'bg-live text-white border-live font-bold' : 'bg-white text-text-muted border-border hover:bg-bg-subtle'
               }`}
             >
               ● Resolved
@@ -219,124 +186,109 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-text-faint absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search country or corridor (e.g. Honduras, Red Sea)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm bg-white text-text placeholder-text-faint focus:outline-none focus:border-brand transition-colors"
-          />
-        </div>
-
-        {/* Outage Cards Feed */}
-        <div className="space-y-4">
+        {/* Disruption Cards */}
+        <div className="grid grid-cols-1 gap-5">
           {filteredOutages.map((evt) => {
             const dur = calculateEventDuration(evt);
             const isOngoing = !evt.endedAt;
 
             return (
-              <div
-                key={evt.id}
-                className="bg-white border border-border rounded-xl p-5 sm:p-6 shadow-sm hover:border-brand/40 transition-all hover:shadow space-y-4"
-              >
-                {/* Event Card Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-border pb-3">
-                  <div className="flex items-center space-x-3">
-                    {evt.state === 'anomaly' && <span className="w-3.5 h-3.5 rounded-full bg-anomaly flex-shrink-0" title="Anomaly (Circle)" />}
-                    {evt.state === 'outage' && <span className="w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[12px] border-b-outage flex-shrink-0" title="Outage (Triangle)" />}
-                    {evt.state === 'shutdown' && <span className="w-3.5 h-3.5 bg-shutdown flex-shrink-0" title="Shutdown (Square)" />}
-                    {evt.state === 'resolved' && <span className="w-3.5 h-3.5 rounded-full bg-resolved flex-shrink-0" title="Resolved (Circle)" />}
-
-                    <div>
-                      <h3 className="font-bold text-text text-base">
-                        {evt.country} {evt.region ? `· ${evt.region}` : ''}
-                      </h3>
-                      <div className="text-xs text-text-muted font-mono">{evt.countryIso} · Started {evt.startedAt.slice(0, 16).replace('T', ' ')} UTC</div>
+              <div key={evt.id} className="bg-white border border-border rounded-lg p-6 hover:border-brand/40 transition-shadow shadow-sm">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border pb-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
+                        evt.state === 'shutdown' ? 'bg-purple-100 text-purple-900 border border-purple-300' :
+                        evt.state === 'outage' ? 'bg-red-50 text-red-900 border border-red-300' :
+                        evt.state === 'anomaly' ? 'bg-amber-50 text-amber-900 border border-amber-300' :
+                        'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      }`}>
+                        {evt.state.toUpperCase()}
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-xs font-mono bg-bg-subtle text-text-muted border border-border">
+                        Started {evt.startedAt.slice(0, 16).replace('T', ' ')} UTC
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-mono font-semibold ${
+                        isOngoing ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-bg-subtle text-text-muted border border-border'
+                      }`}>
+                        {dur.label}
+                      </span>
                     </div>
-
-                    <span className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider ${
-                      evt.state === 'shutdown' ? 'bg-shutdown text-white' :
-                      evt.state === 'outage' ? 'bg-outage text-white' :
-                      evt.state === 'anomaly' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
-                      'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                    }`}>
-                      {evt.state}
-                    </span>
+                    <h3 className="text-xl font-bold font-display text-text">
+                      {evt.country} {evt.region ? `· ${evt.region}` : ''}
+                    </h3>
+                    <p className="text-xs text-text-muted font-mono mt-0.5">ISO: {evt.countryIso} · Telemetry Ingest Confirmed</p>
                   </div>
 
-                  <div className="text-xs font-mono text-text-body flex items-center gap-2 self-end sm:self-center">
-                    <span className={`px-2.5 py-1 rounded border font-semibold ${
-                      isOngoing ? 'bg-amber-50 text-amber-900 border-amber-200' : 'bg-bg-subtle text-text-muted border-border'
-                    }`}>
-                      {dur.label}
+                  <div className="text-right font-mono">
+                    <span className="text-xs text-text-faint block">SEVERITY SCORE</span>
+                    <span className="text-2xl font-bold text-text num-tabular">
+                      {evt.severityScore ? `${evt.severityScore}/100` : 'Provisional'}
                     </span>
                   </div>
                 </div>
 
-                {/* Quantitative Observation Telemetry Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Observation Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 py-4 border-b border-border">
                   {evt.observations.map((obs) => (
-                    <div key={obs.id} className="bg-bg-subtle p-3 rounded-lg border border-border/80 text-xs space-y-1">
+                    <div key={obs.id} className="bg-bg-subtle p-3 rounded-md text-xs font-mono">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-text">{obs.sourceName}</span>
-                        <span className="font-mono text-brand font-bold">{obs.metric.replace(/_/g, ' ')}: {obs.value}%</span>
+                        <strong className="text-text">{obs.sourceName}</strong>
+                        <span className="text-brand font-bold">{obs.metric.replace(/_/g, ' ')}: {obs.value}%</span>
                       </div>
-                      <div className="text-text-muted text-[11px] leading-relaxed">{obs.baselineNote}</div>
+                      <p className="text-text-muted text-[11px] mt-1 leading-relaxed">{obs.baselineNote}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Qualitative Attributed Cause Assertions Block */}
+                {/* Attributed Cause Assertions Block */}
                 {evt.causes.length > 0 ? (
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    <div className="text-xs font-semibold text-text-muted flex items-center gap-1.5">
+                  <div className="space-y-2 py-3 border-b border-border text-xs">
+                    <span className="font-mono text-text-muted font-semibold flex items-center gap-1.5">
                       <Quote className="w-3.5 h-3.5 text-brand" />
-                      <span>ATTRIBUTED CAUSE ASSERTION (SEPARATE FACT FROM OBSERVATION)</span>
-                    </div>
+                      Attributed Cause Assertion (Separated from Observation):
+                    </span>
                     {evt.causes.map((c) => (
-                      <div key={c.id} className="bg-brand-soft/50 border border-brand/20 p-3 sm:p-4 rounded-lg text-xs space-y-1">
-                        <div className="flex justify-between items-center font-semibold text-brand-ink">
+                      <div key={c.id} className="bg-brand-soft/40 border border-brand/20 p-3 rounded-md space-y-1">
+                        <div className="flex justify-between items-center font-mono font-semibold text-brand-ink">
                           <span>Asserted by {c.sourceName} ({c.attribution})</span>
-                          <span className="font-mono uppercase text-[10px] bg-white px-2 py-0.5 rounded border border-brand/20 shadow-xs">
+                          <span className="uppercase text-[10px] bg-white px-1.5 py-0.5 rounded border border-brand/20">
                             {c.assertedCause}
                           </span>
                         </div>
-                        <p className="text-text-body italic leading-relaxed">"{c.verbatimQuote}"</p>
+                        <p className="text-text-body font-mono text-[11px] italic leading-relaxed">
+                          "{c.verbatimQuote}"
+                        </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-xs text-text-faint italic pt-2 border-t border-border flex items-center gap-1.5">
+                  <div className="py-3 border-b border-border text-xs text-text-faint font-mono italic flex items-center gap-1.5">
                     <Info className="w-3.5 h-3.5" />
                     <span>Cause not stated by any reporting authority. (Traffic drops do not inherently possess an attributed cause).</span>
                   </div>
                 )}
 
                 {/* Card Footer */}
-                <div className="pt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-text-faint font-mono">
-                  <span>
-                    Severity: {evt.severityScore ? `${evt.severityScore}/100` : 'Provisional'} {isOngoing ? '(Duration Factor Excluded)' : ''}
-                  </span>
-                  <div className="flex items-center space-x-4">
-                    {evt.modelledUsersAffected && (
-                      <span className="text-[11px] text-text-muted font-mono">
-                        Modelled Impact: {evt.modelledUsersAffected.toLocaleString()} users (never summed)
-                      </span>
-                    )}
-                    {evt.observations[0]?.documentUrl && (
-                      <a
-                        href={evt.observations[0].documentUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-brand hover:underline flex items-center gap-1 font-medium font-ui"
-                      >
-                        Telemetry Source <ArrowUpRight className="w-3 h-3" />
-                      </a>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 text-xs text-text-muted">
+                  <div className="font-mono text-[11px]">
+                    {evt.modelledUsersAffected ? (
+                      <span>Modelled Impact: <strong className="text-text">{evt.modelledUsersAffected.toLocaleString()} users</strong> (never summed globally)</span>
+                    ) : (
+                      <span>Corroboration: <strong className="text-text">{evt.observations.length} independent stream(s)</strong></span>
                     )}
                   </div>
+                  {evt.observations[0]?.documentUrl && (
+                    <a
+                      href={evt.observations[0].documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1 text-brand hover:underline font-mono text-[11px]"
+                    >
+                      <span>View Primary Telemetry Source</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
                 </div>
               </div>
             );
