@@ -1,5 +1,7 @@
 'use client';
 
+import { WorldVectorLandmass } from './WorldVectorLandmass';
+
 import React, { useState } from 'react';
 import { WifiOff, Radio, ShieldAlert, AlertTriangle, CheckCircle, Info, ExternalLink, Activity } from 'lucide-react';
 
@@ -119,7 +121,7 @@ export const MONITORED_OUTAGES: ConnectivityEvent[] = [
 
 function projectGlobalCoords(lat: number, lng: number): { x: number; y: number } {
   const x = ((lng + 180) / 360) * 100;
-  const y = ((85 - lat) / 170) * 100;
+  const y = ((84 - lat) / 142) * 100;
   return {
     x: Math.max(2, Math.min(98, x)),
     y: Math.max(3, Math.min(97, y))
@@ -193,27 +195,16 @@ export function GlobalOutageMap() {
       {/* SVG Canvas */}
       <div className="relative w-full bg-[#F8FAFC] border-b border-[#E4E9F0] overflow-hidden" style={{ minHeight: '360px' }}>
         <svg
-          viewBox="0 0 100 55"
+          viewBox="0 0 1000 500"
           className="w-full h-auto max-h-[440px] select-none pointer-events-none"
           preserveAspectRatio="xMidYMid meet"
         >
-          {/* Lat / Lng Grid */}
-          <line x1="0" y1="27.5" x2="100" y2="27.5" stroke="#E2E8F0" strokeWidth="0.3" strokeDasharray="1 1" />
-          <line x1="50" y1="0" x2="50" y2="55" stroke="#E2E8F0" strokeWidth="0.3" strokeDasharray="1 1" />
-
-          {/* Continents */}
-          <path d="M 12,8 L 26,8 L 32,16 L 24,24 L 20,28 L 14,24 Z" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
-          <path d="M 24,29 L 34,31 L 32,46 L 27,51 L 24,38 Z" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
-          <path d="M 46,10 L 58,10 L 56,19 L 48,19 Z" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
-          <path d="M 46,21 L 58,21 L 60,38 L 52,47 L 46,33 Z" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
-          <path d="M 59,7 L 90,8 L 86,28 L 68,26 L 60,18 Z" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
-          <path d="M 80,36 L 93,36 L 90,48 L 78,46 Z" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
-
+          <WorldVectorLandmass />
           {/* Subsea cable conduits illustrative routes */}
-          <path d="M 28,15 Q 38,20 46,14" fill="none" stroke="#0E63C4" strokeWidth="0.5" strokeDasharray="1 1" opacity="0.4" />
-          <path d="M 54,18 Q 50,26 48,34" fill="none" stroke="#0E63C4" strokeWidth="0.5" strokeDasharray="1 1" opacity="0.4" />
-          <path d="M 56,19 Q 62,25 72,30" fill="none" stroke="#0E63C4" strokeWidth="0.5" strokeDasharray="1 1" opacity="0.4" />
-          <path d="M 72,30 Q 82,26 88,24" fill="none" stroke="#0E63C4" strokeWidth="0.5" strokeDasharray="1 1" opacity="0.4" />
+          <path d="M 280,150 Q 380,200 500,114" fill="none" stroke="#0E63C4" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.6" />
+          <path d="M 500,180 Q 480,260 550,415" fill="none" stroke="#0E63C4" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.6" />
+          <path d="M 590,190 Q 690,250 788,291" fill="none" stroke="#0E63C4" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.6" />
+          <path d="M 788,291 Q 888,200 170,165" fill="none" stroke="#0E63C4" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.6" />
         </svg>
 
         {/* Markers with Strict 3-Shape Encoding */}
